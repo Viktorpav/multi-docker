@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t viktor2003/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true viktor2003/react-test npm test
+
+after_success:
+  - docker build -t viktor2003/multi-client ./client
+  - docker build -t viktor2003/multi-nginx ./nginx
+  - docker build -t viktor2003/multi-server ./server
+  - docker build -t viktor2003/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push viktor2003/multi-client
+  - docker push viktor2003/multi-nginx
+  - docker push viktor2003/multi-server
+  - docker push viktor2003/multi-worker
